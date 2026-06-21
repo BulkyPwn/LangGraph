@@ -15,11 +15,9 @@
 """
 from __future__ import annotations
 
-import sqlite3
 from typing import Optional
 
 from langchain_core.messages import AIMessage
-from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode
 from langgraph.store.base import BaseStore
@@ -115,14 +113,6 @@ def build_graph(
         store=store,
         interrupt_before=interrupt_before,
     )
-
-
-def make_sqlite_checkpointer(path: str = SQLITE_PATH) -> SqliteSaver:
-    """创建并初始化【同步】SQLite 检查点保存器（仅用于同步执行场景）。"""
-    conn = sqlite3.connect(path, check_same_thread=False)
-    checkpointer = SqliteSaver(conn)
-    checkpointer.setup()  # 建表
-    return checkpointer
 
 
 async def make_async_sqlite_checkpointer(path: str = SQLITE_PATH):

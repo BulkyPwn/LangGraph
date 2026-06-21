@@ -119,7 +119,11 @@ async def plan(state: TravelState) -> dict:
     )
     resp = await llm.ainvoke([system, user])
     print(f"[plan] 生成计划，是否含工具调用：{bool(getattr(resp, 'tool_calls', None))}")
-    return {"messages": [resp]}
+    # 写入 plan 键以触发 merge_plan reducer
+    return {
+        "messages": [resp],
+        "plan": {"title": f"第{state.get('iterations', 0) + 1}版行程", "content": resp.content},
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -139,6 +143,9 @@ def approval(state: TravelState) -> Command:
             "budget_limit": state.get("budget_limit", BUDGET_LIMIT),
         }
     )
+    # 类型保护：若 resume 值为结构化 dict，提取其中的 action 字段
+    if isinstance(decision, dict):
+        decision = decision.get("action", decision)
     approved = str(decision).strip().lower() in ("yes", "y", "true", "1", "批准", "同意", "ok")
     goto = "finalize" if approved else "revise"
     print(f"[approval] 人工决策={decision!r} → approved={approved} → goto={goto}")

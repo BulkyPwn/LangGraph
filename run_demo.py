@@ -17,7 +17,7 @@ import asyncio
 import os
 
 import graph as graph_mod
-from store import GLOBAL_STORE, load_user_preferences, save_user_preference
+from store import GLOBAL_STORE, load_user_preferences, save_user_preference, search_users
 
 # 演示用独立 sqlite，避免跨次运行累积
 DB = "checkpoints_demo.sqlite"
@@ -114,6 +114,10 @@ async def demo_memory(app):
     prefs = load_user_preferences(GLOBAL_STORE, "demo_user")
     print(f"写入并读回偏好: {prefs}")
 
+    # 演示 BaseStore 搜索
+    hits = search_users(GLOBAL_STORE, "style")
+    print(f"BaseStore 按关键词搜索命中: {hits}")
+
     config = {"configurable": {"thread_id": "trip-mem"}}
     async for chunk in app.astream(
         {"query": "去成都玩", "budget_limit": 1000.0},
@@ -148,7 +152,7 @@ async def demo_time_travel(app):
             f"approved={vals.get('approved')} budget={vals.get('budget_total')}"
         )
 
-    if len(history) >= 5:
+    if len(history) >= 6:
         past = history[5]
         print(f"\n回看到历史检查点 {past.config['configurable']['checkpoint_id'][:8]}：")
         print(f"  当时 next={past.next}, values键={list((past.values or {}).keys())}")
